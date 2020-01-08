@@ -1,0 +1,168 @@
+<template>
+    <div>
+        <h2>Articles</h2>
+        <form id="app" @submit.prevent="addArticle" class="mb-3"   >
+            <div class="form-group">
+                <ValidationProvider rules='required' v-slot="v">
+                <input v-model="carticle.title" type="text" class="form-control" placeholder="title" >
+                  <span>{{ v.errors[0] }}</span>
+                </ValidationProvider>
+
+            </div>
+            <div class="form-group">
+                <ValidationProvider rules='required' v-slot="v">
+                <textarea class="form-control" placeholder="Body" v-model="carticle.body"></textarea>
+                <span>{{ v.errors[0] }}</span>
+                </ValidationProvider>
+            </div>
+            <button type="submit" class="btn btn-light btn-block">Save</button>
+        </form>
+        <nav aria-label="Page navigation example">
+  <ul class="pagination">
+    <li v-bind:class="[{disabled: !pagination.prev_page_url}]" class="page-item"><a class="page-link" href="#"
+     @click="fetchcarticles(pagination.prev_page_url)">Previous</a></li>
+
+         <li class="page-item disabled"><a class="page-link text-dark" href="#">Page {{pagination.current_page}} of
+             {{pagination.last_page}}</a></li>
+
+    
+    <li v-bind:class="[{disabled: !pagination.next_page_url}]" class="page-item"><a class="page-link" href="#"
+    @click="fetchcarticles(pagination.next_page_url)">Next</a></li>
+  </ul>
+</nav>
+        <div class="card card-body mb-2" v-for="carticle in carticles" 
+        v-bind:key="carticle.id">  
+        <h3>{{carticle.title}}</h3>
+        <p>{{carticle.body}}</p>
+        <hr>
+        <button @click="deleteArticle(carticle.id)" class="btn btn-danger">Delete</button>
+        <button @click="editArticle(carticle)" class="btn btn-warning">Edit</button>
+
+        </div>
+        </div>
+</template>
+
+<script>
+import { ValidationProvider, extend } from 'vee-validate';
+import { required } from 'vee-validate/dist/rules';
+extend('required', {
+  ...required,
+  message: 'This field is required'
+});
+
+new Vue({
+  el: '#app',
+  components: {
+    ValidationProvider
+  },
+  data: () => ({
+    value: ''
+  })
+});
+
+export default {
+    components: {
+    ValidationProvider
+  },
+    
+    data(){
+        
+        return{
+            carticles:[],
+            carticle:{
+                id: '',
+                title:'',
+                body:'',
+            }, 
+            carticle_id: '',
+            pagination: {},
+            edit: false
+        }
+    },
+    created(){
+        this.fetchcarticles();
+    },
+
+    methods:{
+        fetchcarticles(page_url){
+            let vm = this;
+            page_url = page_url || '/api/carticles'
+            fetch(page_url)
+            .then(res => res.json())
+            .then(res => {
+             this.carticles = res.data;
+             vm.makePagination(res.meta, res.links);      
+            })
+            .catch(err => console.log(err)); 
+
+        },
+        makePagination(meta, links){
+            let pagination = {
+                current_page: meta.current_page,
+                last_page: meta.last_page,
+                next_page_url: links.next,
+                prev_page_url: links.prev
+            };
+            this.pagination = pagination;
+
+        },
+        deleteArticle(id){
+            if(confirm('Are you sure?')){
+                fetch(`api/carticle/${id}`,{
+                  method: 'delete' } )
+                .then(res => res.json())
+                .then(data => {
+                    alert('Article Removed');
+                    this.fetchcarticles();
+                })
+                .catch(err => console.log());
+                
+            }
+
+        },
+        addArticle(){
+            if(this.edit === false){
+                //add
+                fetch('api/carticle', {
+                    method: 'post', 
+                    body: JSON.stringify(this.carticle),
+                    headers:{
+                        'content-type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data =>{ 
+                    this.carticle.title = '';
+                    this.carticle.body = '';
+                    alert('Article Added');
+                    this.fetchcarticles();        })
+                .catch(err => console.log(err));
+            }else{
+                //update
+                fetch('api/carticles', {
+                    method: 'put', 
+                    body: JSON.stringify(this.carticle),
+                    headers:{
+                        'content-type': 'application/json'
+                        }
+                })
+                .then(res => res.json())
+                .then(data =>{ 
+                    this.carticle.title = '';
+                    this.carticle.body = '';
+                    alert('Article Updated');
+                    this.fetchcarticles();        })
+                .catch(err => console.log(err));
+            }
+        },
+        editArticle(carticle){
+                this.edit = true;
+                this.carticle.id = carticle.id;
+                this.carticle.carticle_id = carticle.id;
+                this.carticle.title = carticle.title;
+                this.carticle.body = carticle.body; 
+            }
+
+    }
+};
+</script>
