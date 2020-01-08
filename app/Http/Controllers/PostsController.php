@@ -15,7 +15,8 @@ class PostsController extends Controller
          <li>The task Below is a full CRUD  Single page application to create articles</li>
          <li>The application consists of GET PUT POST DELETE methods. The application was also assembled using VUEjs (this is highlighted 
          in chrome dev tools), NPM and various other technologies.
-         <li>The application was also created using laravel framework Version 6 </li><br>
+         <li>The application was also created using laravel framework Version 6 </li>
+         <li>You can also watch a demo of thison here and will delete it after https://youtu.be/ZrJR_pwa20g</li><br>
 ',
         'my-second-post'=>'<li>This Message was also created Using ajax XHR request for demostrational purposes and can be located
         in the PostsController.php' 
